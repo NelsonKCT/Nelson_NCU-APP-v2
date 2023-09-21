@@ -1,13 +1,25 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ImagePickerResult, launchImageLibraryAsync } from 'expo-image-picker';
-import { Box, Button, HStack, Heading, Input, NativeBaseProvider, VStack, extendTheme } from 'native-base';
-import React, { useState } from 'react';
+import { MediaLibrary } from 'expo-media-library';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import {
+  Box,
+  Button,
+  HStack,
+  Heading,
+  Input,
+  NativeBaseProvider,
+  VStack,
+  extendTheme,
+} from 'native-base';
+import { useState } from 'react';
 import { Image, Text } from 'react-native';
+import firebase_controller, { storage } from '../../firebase_func';
 import { styles } from '../stylesheet';
 
 //預設為Dark Mode
-function CreateEventScreen({navigation}:any){
+function CreateEventScreen({ navigation }) {
   const config = {
     useSystemColorMode: false,
     initialColorMode: 'dark',
@@ -19,7 +31,10 @@ function CreateEventScreen({navigation}:any){
   const [eventLocation, setEventLocation] = useState('');
   const [eventCost, setEventCost] = useState('');
   const [eventDescription, setEventDescription] = useState('');
-  const [selectedImage, setSelectedImage] = useState<ImagePickerResult | null>(null);
+  const [selectedImage, setSelectedImage] = useState<ImagePickerResult | null>(
+    null,
+  );
+  const [imgUrl, setImgUrl] = useState(''); //firebase storage url
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
@@ -69,16 +84,56 @@ function CreateEventScreen({navigation}:any){
   const handleUploadImage = async () => {
     const result = await launchImageLibraryAsync();
     if (!result.canceled) {
-      setSelectedImage(result);
+      const { uri } = result.assets[0];
+
+      try {
+        // const storageRef = ref(storage, `images/${uri}`);
+        // const uploadTask = uploadBytes(storageRef, uri);
+        // const url = await getDownloadURL(storageRef);
+        //url是圖片的網址，直接打在瀏覽器上可以連到那張照片
+
+        const asset = await MediaLibrary.createAssetAsync(uri);
+
+        const storageRef = ref(storage, `/images/${asset.id}`);
+        const uploadTask = uploadBytes(storageRef, asset);
+        await uploadTask;
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // 將下載連結儲存到狀態中或其他需要使用的地方
+        setSelectedImage(downloadURL);
+        setImgUrl(downloadURL);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
     }
   };
+
+  //活動儲存至firebase (backend)
+  const handleAddEvent = async () => {
+    const eventInfo = {
+      NAME: eventName,
+      START_TIME: startDate,
+      END_TIME: endDate,
+      PLACE: eventLocation,
+      COST: eventCost,
+      INTRO: eventDescription,
+      IMG: imgUrl,
+    };
+    firebase_controller.add(eventInfo);
+  };
+
   return (
-    
     <NativeBaseProvider theme={customTheme}>
-      <Box style={styles.container} safeArea>
+      <Box style={styles.container}>
         <HStack>
-          <Button marginLeft={4} onPress={()=>navigation.navigate('EventMainScreen')}>返回</Button>
-          <Heading size="lg" marginLeft={60}>新增活動</Heading>
+          <Button
+            marginLeft={4}
+            onPress={() => navigation.navigate('EventMainScreen')}>
+            返回
+          </Button>
+          <Heading size="lg" marginLeft={60}>
+            新增活動
+          </Heading>
         </HStack>
         <VStack space={3} marginTop={3}>
           <Text style={styles.text}>活動名稱</Text>
@@ -95,34 +150,39 @@ function CreateEventScreen({navigation}:any){
           <HStack space={3} marginTop={3} marginLeft={4}>
             <Button onPress={showStartDatePickerModal}>開始時間</Button>
             {showStartDatePicker && (
-            <DateTimePicker
-              testID="startDatePicker"
-              value={startDate}
-              mode="datetime" //time才有is24hour
-              //is24Hour={true}
-              display="default"
-              onChange={handleStartDateChange}
-              minimumDate={new Date()}
-            />
-          )}
-            
+              <DateTimePicker
+                testID="startDatePicker"
+                value={startDate}
+                mode="datetime"
+                is24Hour
+                display="default"
+                onChange={handleStartDateChange}
+                minimumDate={new Date()}
+              />
+            )}
           </HStack>
           <HStack space={3} marginTop={3} marginLeft={4}>
             <Button onPress={showEndDatePickerModal}>結束時間</Button>
             {showEndDatePicker && (
-            <DateTimePicker
-              testID="endDatePicker"
-              value={endDate}
-              mode="datetime" //time才有is24hour
-              // is24Hour={true}
-              display="default"
-              onChange={handleEndDateChange}
-              minimumDate={startDate}
-            />
+              <DateTimePicker
+                testID="endDatePicker"
+                value={endDate}
+                mode="datetime"
+                is24Hour
+                display="default"
+                onChange={handleEndDateChange}
+                minimumDate={startDate}
+              />
             )}
           </HStack>
-          <Text style={styles.text}>開始時間 : {startDate.toLocaleDateString()} {startDate.toLocaleTimeString()}</Text>
-          <Text style={styles.text}>結束時間 : {endDate.toLocaleDateString()} {endDate.toLocaleTimeString()}</Text>
+          <Text style={styles.text}>
+            開始時間 : {startDate.toLocaleDateString()}{' '}
+            {startDate.toLocaleTimeString()}
+          </Text>
+          <Text style={styles.text}>
+            結束時間 : {endDate.toLocaleDateString()}{' '}
+            {endDate.toLocaleTimeString()}
+          </Text>
           <Text style={styles.text}>活動地點</Text>
           <Input
             style={styles.input}
@@ -158,20 +218,24 @@ function CreateEventScreen({navigation}:any){
           />
         </VStack>
         <HStack space={3} marginTop={10} marginLeft={5}>
-          <Button onPress={handleUploadImage} startIcon={<MaterialIcons name="add-a-photo" />}>
+          <Button
+            onPress={handleUploadImage}
+            startIcon={<MaterialIcons name="add-a-photo" />}>
             上傳照片
           </Button>
-          {selectedImage?.assets && (  //selectedImage可能是null 所以用selectedImage?.assets
-            <Image source={{ uri: selectedImage.assets[0].uri }} style={{ width: 200, height: 100 }} />
-            //可以印出來看selectedImage裡面的結構 再找uri
+          {selectedImage && (
+            <Image
+              source={{ uri: selectedImage.uri }}
+              style={{ width: 200, height: 100 }}
+            />
           )}
         </HStack>
         <VStack space={4} marginTop={3} alignItems="center">
-          <Button>確認新增</Button>
+          <Button onPress={handleAddEvent}>新增活動</Button>
         </VStack>
       </Box>
     </NativeBaseProvider>
   );
-};
+}
 
 export default CreateEventScreen;
