@@ -1,8 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ImagePickerResult, launchImageLibraryAsync } from 'expo-image-picker';
-import { MediaLibrary } from 'expo-media-library';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import {
   Box,
   Button,
@@ -15,7 +13,7 @@ import {
 } from 'native-base';
 import { useState } from 'react';
 import { Image, Text } from 'react-native';
-import firebase_controller, { storage } from '../../firebase_func';
+import firebase_controller from '../../firebase_func';
 import { styles } from '../stylesheet';
 
 //預設為Dark Mode
@@ -83,24 +81,18 @@ function CreateEventScreen({ navigation }) {
   //上傳照片
   const handleUploadImage = async () => {
     const result = await launchImageLibraryAsync();
+    console.log(result.assets[0].uri);
     if (!result.canceled) {
       const { uri } = result.assets[0];
-
       try {
-        // const storageRef = ref(storage, `images/${uri}`);
-        // const uploadTask = uploadBytes(storageRef, uri);
-        // const url = await getDownloadURL(storageRef);
-        //url是圖片的網址，直接打在瀏覽器上可以連到那張照片
+        const response = await fetch(uri);
+        const blob = await response.blob();
 
-        const asset = await MediaLibrary.createAssetAsync(uri);
-
-        const storageRef = ref(storage, `/images/${asset.id}`);
-        const uploadTask = uploadBytes(storageRef, asset);
-        await uploadTask;
-        const downloadURL = await getDownloadURL(storageRef);
+        const downloadURL = await firebase_controller.uploadImage(blob);
 
         // 將下載連結儲存到狀態中或其他需要使用的地方
-        setSelectedImage(downloadURL);
+        setSelectedImage({ uri: downloadURL });
+
         setImgUrl(downloadURL);
       } catch (error) {
         console.error('Error uploading image:', error);

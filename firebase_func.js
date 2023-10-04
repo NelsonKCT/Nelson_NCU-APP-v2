@@ -2,7 +2,7 @@
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import { addDoc, collection, getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -28,7 +28,18 @@ async function add(docData) {
   await addDoc(collection(db, 'ACTIVITY'), docData);
 }
 
+async function uploadImage(blob) {
+  const filename = `${new Date().getTime()}.jpg`; // 使用當前時間戳作為文件名
+  const storageRef = ref(storage, `/images/${filename}`);
+
+  await uploadBytes(storageRef, blob);
+  const downloadURL = await getDownloadURL(storageRef);
+
+  return downloadURL; // 返回從Firebase Storage取得的URL
+}
+
 export default {
   add,
   storage,
+  uploadImage,
 };
