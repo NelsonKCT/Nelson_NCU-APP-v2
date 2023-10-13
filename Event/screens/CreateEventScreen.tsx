@@ -1,40 +1,26 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { ImagePickerResult, launchImageLibraryAsync } from 'expo-image-picker';
 import {
   Box,
   Button,
-  HStack,
   Heading,
   Input,
   NativeBaseProvider,
   VStack,
-  extendTheme,
 } from 'native-base';
 import { useState } from 'react';
-import { Image, Text } from 'react-native';
+import { Text } from 'react-native';
+
 import firebase_controller from '../../firebase_func';
+import DateTimePicker from '../components/DateTimePicker';
+import ImagePicker from '../components/ImagePicker';
 import { styles } from '../stylesheet';
 
 //預設為Dark Mode
 function CreateEventScreen({ navigation }) {
-  const config = {
-    useSystemColorMode: false,
-    initialColorMode: 'dark',
-  };
-
-  const customTheme = extendTheme({ config });
-
   const [eventName, setEventName] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [eventCost, setEventCost] = useState('');
   const [eventDescription, setEventDescription] = useState('');
-  const [selectedImage, setSelectedImage] = useState<ImagePickerResult | null>(
-    null,
-  );
   const [imgUrl, setImgUrl] = useState(''); //firebase storage url
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
@@ -55,51 +41,6 @@ function CreateEventScreen({ navigation }) {
     setEventDescription(text);
   };
 
-  // 選擇開始日期
-  const handleStartDateChange = (event: any, selectedDate?: Date) => {
-    setShowStartDatePicker(false);
-    if (selectedDate) {
-      setStartDate(selectedDate);
-    }
-  };
-
-  // 選擇結束日期
-  const handleEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndDatePicker(false);
-    if (selectedDate) {
-      setEndDate(selectedDate);
-    }
-  };
-  //顯示開始日期選擇器
-  const showStartDatePickerModal = () => {
-    setShowStartDatePicker(true);
-  };
-  //顯示結束日期選擇器
-  const showEndDatePickerModal = () => {
-    setShowEndDatePicker(true);
-  };
-  //上傳照片
-  const handleUploadImage = async () => {
-    const result = await launchImageLibraryAsync();
-    console.log(result.assets[0].uri);
-    if (!result.canceled) {
-      const { uri } = result.assets[0];
-      try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-
-        const downloadURL = await firebase_controller.uploadImage(blob);
-
-        // 將下載連結儲存到狀態中或其他需要使用的地方
-        setSelectedImage({ uri: downloadURL });
-
-        setImgUrl(downloadURL);
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      }
-    }
-  };
-
   //活動儲存至firebase (backend)
   const handleAddEvent = async () => {
     const eventInfo = {
@@ -115,18 +56,11 @@ function CreateEventScreen({ navigation }) {
   };
 
   return (
-    <NativeBaseProvider theme={customTheme}>
+    <NativeBaseProvider>
       <Box style={styles.container}>
-        <HStack>
-          <Button
-            marginLeft={4}
-            onPress={() => navigation.navigate('EventMainScreen')}>
-            返回
-          </Button>
-          <Heading size="lg" marginLeft={60}>
-            新增活動
-          </Heading>
-        </HStack>
+        <Heading size="lg" marginLeft={60}>
+          新增活動
+        </Heading>
         <VStack space={3} marginTop={3}>
           <Text style={styles.text}>活動名稱</Text>
           <Input
@@ -139,34 +73,18 @@ function CreateEventScreen({ navigation }) {
             placeholder="請輸入活動名稱"
             placeholderTextColor="#CCCCCC"
           />
-          <HStack space={3} marginTop={3} marginLeft={4}>
-            <Button onPress={showStartDatePickerModal}>開始時間</Button>
-            {showStartDatePicker && (
-              <DateTimePicker
-                testID="startDatePicker"
-                value={startDate}
-                mode="datetime"
-                is24Hour
-                display="default"
-                onChange={handleStartDateChange}
-                minimumDate={new Date()}
-              />
-            )}
-          </HStack>
-          <HStack space={3} marginTop={3} marginLeft={4}>
-            <Button onPress={showEndDatePickerModal}>結束時間</Button>
-            {showEndDatePicker && (
-              <DateTimePicker
-                testID="endDatePicker"
-                value={endDate}
-                mode="datetime"
-                is24Hour
-                display="default"
-                onChange={handleEndDateChange}
-                minimumDate={startDate}
-              />
-            )}
-          </HStack>
+          <DateTimePicker
+            label="開始時間"
+            value={startDate}
+            onChange={setStartDate}
+            minimumDate={new Date()}
+          />
+          <DateTimePicker
+            label="結束時間"
+            value={endDate}
+            onChange={setEndDate}
+            minimumDate={startDate}
+          />
           <Text style={styles.text}>
             開始時間 : {startDate.toLocaleDateString()}{' '}
             {startDate.toLocaleTimeString()}
@@ -209,19 +127,7 @@ function CreateEventScreen({ navigation }) {
             placeholderTextColor="#CCCCCC"
           />
         </VStack>
-        <HStack space={3} marginTop={10} marginLeft={5}>
-          <Button
-            onPress={handleUploadImage}
-            startIcon={<MaterialIcons name="add-a-photo" />}>
-            上傳照片
-          </Button>
-          {selectedImage && (
-            <Image
-              source={{ uri: selectedImage.uri }}
-              style={{ width: 200, height: 100 }}
-            />
-          )}
-        </HStack>
+        <ImagePicker onImageSelected={setImgUrl} />
         <VStack space={4} marginTop={3} alignItems="center">
           <Button onPress={handleAddEvent}>新增活動</Button>
         </VStack>
