@@ -58,8 +58,8 @@ function CreateEventScreen({ navigation }) {
   return (
     <NativeBaseProvider>
       <Box style={styles.container}>
-        <Heading size="lg" marginLeft={60}>
-          新增活動
+        <Heading size="lg" marginLeft={140}>
+          活動列表
         </Heading>
         <VStack space={3} marginTop={3}>
           <Text style={styles.text}>活動名稱</Text>
@@ -130,6 +130,9 @@ function CreateEventScreen({ navigation }) {
         <ImagePicker onImageSelected={setImgUrl} />
         <VStack space={4} marginTop={3} alignItems="center">
           <Button onPress={handleAddEvent}>新增活動</Button>
+          <Button onPress={() => navigation.navigate('EventMainScreen')}>
+            返回活動列表
+          </Button>
         </VStack>
       </Box>
     </NativeBaseProvider>
