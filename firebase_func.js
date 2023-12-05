@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
-import { addDoc, collection, getFirestore } from 'firebase/firestore';
+import { addDoc, collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -28,6 +28,13 @@ async function add(docData) {
   await addDoc(collection(db, 'ACTIVITY'), docData);
 }
 
+async function getEvents() {
+  const db = getFirestore(app);
+  const querySnapshot = await getDocs(collection(db, 'ACTIVITY'));
+  const events = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  return events;
+}
+
 async function uploadImage(blob) {
   const filename = `${new Date().getTime()}.jpg`; // 使用當前時間戳作為文件名
   const storageRef = ref(storage, `/images/${filename}`);
@@ -42,4 +49,5 @@ export default {
   add,
   storage,
   uploadImage,
+  getEvents,
 };
