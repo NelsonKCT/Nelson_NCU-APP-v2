@@ -1,4 +1,12 @@
-import { Box, Heading, NativeBaseProvider, extendTheme } from 'native-base';
+import {
+  Box,
+  Button,
+  Heading,
+  NativeBaseProvider,
+  ScrollView,
+  Text,
+  extendTheme,
+} from 'native-base';
 import React, { useEffect, useState } from 'react';
 
 import firebase_controller from '../../firebase_func';
@@ -44,9 +52,32 @@ function EventMainScreen({ navigation }: any) {
   return (
     <NativeBaseProvider theme={customTheme}>
       <Box style={styles.container}>
-        <Heading size="lg" marginLeft={140}>
-          活動列表
-        </Heading>
+        <ScrollView>
+          <Heading size="lg" alignSelf={'center'}>
+            活動列表
+          </Heading>
+          <Button
+            width={150}
+            alignSelf={'center'}
+            marginTop={3}
+            onPress={() => navigation.navigate('CreateEventScreen')}>
+            新增活動
+          </Button>
+          {events.map(event => (
+            <Box key={event.id}>
+              <Text>名稱：{event.NAME}</Text>
+              <Text>地點：{event.PLACE}</Text>
+              <Text>費用：{event.COST}</Text>
+              <Text>介紹：{event.INTRO}</Text>
+              {/* <Text>
+                {new Date(event.START_TIME.seconds * 1000).toLocaleString()}
+              </Text>
+              <Text>
+                {new Date(event.END_TIME.seconds * 1000).toLocaleString()}
+              </Text> */}
+            </Box>
+          ))}
+        </ScrollView>
       </Box>
     </NativeBaseProvider>
   );

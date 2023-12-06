@@ -1,9 +1,11 @@
 import {
   Box,
   Button,
+  HStack,
   Heading,
   Input,
   NativeBaseProvider,
+  ScrollView,
   VStack,
 } from 'native-base';
 import { useState } from 'react';
@@ -58,82 +60,90 @@ function CreateEventScreen({ navigation }) {
   return (
     <NativeBaseProvider>
       <Box style={styles.container}>
-        <Heading size="lg" marginLeft={140}>
-          活動列表
-        </Heading>
-        <VStack space={3} marginTop={3}>
-          <Text style={styles.text}>活動名稱</Text>
-          <Input
-            style={styles.input}
-            w="93%"
-            alignSelf="center"
-            variant="rounded"
-            onChangeText={handleEventNameChange}
-            value={eventName}
-            placeholder="請輸入活動名稱"
-            placeholderTextColor="#CCCCCC"
-          />
-          <DateTimePicker
-            label="開始時間"
-            value={startDate}
-            onChange={setStartDate}
-            minimumDate={new Date()}
-          />
-          <DateTimePicker
-            label="結束時間"
-            value={endDate}
-            onChange={setEndDate}
-            minimumDate={startDate}
-          />
-          <Text style={styles.text}>
-            開始時間 : {startDate.toLocaleDateString()}{' '}
-            {startDate.toLocaleTimeString()}
-          </Text>
-          <Text style={styles.text}>
-            結束時間 : {endDate.toLocaleDateString()}{' '}
-            {endDate.toLocaleTimeString()}
-          </Text>
-          <Text style={styles.text}>活動地點</Text>
-          <Input
-            style={styles.input}
-            w="93%"
-            alignSelf="center"
-            variant="rounded"
-            onChangeText={handleEventLocationChange}
-            value={eventLocation}
-            placeholder="請輸入活動地點"
-            placeholderTextColor="#CCCCCC"
-          />
-          <Text style={styles.text}>參加費用</Text>
-          <Input
-            style={styles.input}
-            w="93%"
-            alignSelf="center"
-            variant="rounded"
-            onChangeText={handleEventCostChange}
-            value={eventCost}
-            placeholder="請輸入參加費用(請輸入數字，無則填0)"
-            placeholderTextColor="#CCCCCC"
-          />
-          <Text style={styles.text}>活動介紹</Text>
-          <Input
-            style={styles.input}
-            w="93%"
-            alignSelf="center"
-            variant="rounded"
-            onChangeText={handleEventDescriptionChange}
-            value={eventDescription}
-            placeholder="請介紹你的活動"
-            placeholderTextColor="#CCCCCC"
-          />
-        </VStack>
-        <ImagePicker onImageSelected={setImgUrl} />
-        <VStack space={4} marginTop={3} alignItems="center">
-          <Button onPress={handleAddEvent}>新增活動</Button>
-          <Button onPress={() => navigation.navigate('EventMainScreen')}>
-            返回活動列表
-          </Button>
-        </VStack>
+        <ScrollView>
+          <Heading color="white" size="lg" marginLeft={140}>
+            新增活動
+          </Heading>
+          <VStack space={3} marginTop={3}>
+            <Text style={styles.text}>活動名稱</Text>
+            <Input
+              style={styles.input}
+              w="93%"
+              alignSelf="center"
+              variant="rounded"
+              onChangeText={handleEventNameChange}
+              value={eventName}
+              placeholder="請輸入活動名稱"
+              placeholderTextColor="#CCCCCC"
+            />
+            <DateTimePicker
+              label="開始時間"
+              value={startDate}
+              onChange={setStartDate}
+              minimumDate={new Date()}
+            />
+            <DateTimePicker
+              label="結束時間"
+              value={endDate}
+              onChange={setEndDate}
+              minimumDate={startDate}
+            />
+            <Text style={styles.text}>
+              開始時間 : {startDate.toLocaleDateString()}{' '}
+              {startDate.toLocaleTimeString()}
+            </Text>
+            <Text style={styles.text}>
+              結束時間 : {endDate.toLocaleDateString()}{' '}
+              {endDate.toLocaleTimeString()}
+            </Text>
+            <Text style={styles.text}>活動地點</Text>
+            <Input
+              style={styles.input}
+              w="93%"
+              alignSelf="center"
+              variant="rounded"
+              onChangeText={handleEventLocationChange}
+              value={eventLocation}
+              placeholder="請輸入活動地點"
+              placeholderTextColor="#CCCCCC"
+            />
+            <Text style={styles.text}>參加費用</Text>
+            <Input
+              style={styles.input}
+              w="93%"
+              alignSelf="center"
+              variant="rounded"
+              onChangeText={handleEventCostChange}
+              value={eventCost}
+              placeholder="請輸入參加費用(請輸入數字，無則填0)"
+              placeholderTextColor="#CCCCCC"
+            />
+            <Text style={styles.text}>活動介紹</Text>
+            <Input
+              style={styles.input}
+              w="93%"
+              alignSelf="center"
+              variant="rounded"
+              onChangeText={handleEventDescriptionChange}
+              value={eventDescription}
+              placeholder="請介紹你的活動"
+              placeholderTextColor="#CCCCCC"
+            />
+          </VStack>
+          <ImagePicker onImageSelected={setImgUrl} />
+          <HStack space={4} marginTop={3} marginLeft={10} alignItems="center">
+            <Button
+              onPress={async () => {
+                await handleAddEvent();
+                navigation.navigate('EventMainScreen');
+              }}>
+              確定新增活動
+            </Button>
+            <Button onPress={() => navigation.navigate('EventMainScreen')}>
+              返回活動列表
+            </Button>
+          </HStack>
+        </ScrollView>
       </Box>
     </NativeBaseProvider>
   );

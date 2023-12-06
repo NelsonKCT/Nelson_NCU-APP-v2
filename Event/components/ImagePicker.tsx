@@ -36,7 +36,7 @@ const ImagePickerComponent: React.FC<Props> = ({ onImageSelected }) => {
   };
 
   return (
-    <HStack space={3} marginTop={10} marginLeft={5}>
+    <HStack space={3} alignSelf={'center'} marginTop={3}>
       <Button
         onPress={handleUploadImage}
         startIcon={<MaterialIcons name="add-a-photo" />}>
